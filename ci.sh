@@ -65,6 +65,7 @@ case $HOST_TARGET in
   x86_64-apple-darwin)
     MIRI_TEST_TARGET=mips64-unknown-linux-gnuabi64 run_tests # big-endian architecture
     MIRI_TEST_TARGET=x86_64-pc-windows-msvc run_tests
+    MIRI_NO_STD=1 ./miri run tests/pass/no_std.rs --target thumbv7em-none-eabihf # no_std embedded architecture minimal test
     ;;
   i686-pc-windows-msvc)
     MIRI_TEST_TARGET=x86_64-unknown-linux-gnu run_tests
