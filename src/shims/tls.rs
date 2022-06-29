@@ -6,8 +6,11 @@ use std::collections::BTreeMap;
 
 use log::trace;
 
+use rustc_ast::ast;
 use rustc_data_structures::fx::FxHashMap;
+use rustc_hir::CRATE_HIR_ID;
 use rustc_middle::ty;
+use rustc_span::sym;
 use rustc_target::abi::{HasDataLayout, Size};
 use rustc_target::spec::abi::Abi;
 
@@ -357,7 +360,14 @@ pub trait EvalContextExt<'mir, 'tcx: 'mir>: crate::MiriEvalContextExt<'mir, 'tcx
             // This is the first time we got asked to schedule a destructor. The
             // Windows schedule destructor function must be called exactly once,
             // this is why it is in this block.
-            if this.tcx.sess.target.os == "windows" {
+            let is_no_std = this.tcx.hir().attrs(CRATE_HIR_ID).iter().any(|attr| {
+                if let ast::AttrKind::Normal(ref attr, _) = attr.kind {
+                    attr.path == sym::no_std
+                } else {
+                    false
+                }
+            });
+            if this.tcx.sess.target.os == "windows" && !is_no_std {
                 // On Windows, we signal that the thread quit by starting the
                 // relevant function, reenabling the thread, and going back to
                 // the scheduler.
